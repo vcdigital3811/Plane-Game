@@ -1,0 +1,434 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;Cyber Flight Simulator&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>* { box-sizing: border-box; margin: 0; padding: 0; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>body, html { width: 100%; height: 100%; overflow: hidden; background: #0a0a16; font-family: 'Courier New', Courier, monospace; color: #fff; user-select: none; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* HUD Overlays */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.hud { position: absolute; z-index: 10; background: rgba(10, 10, 22, 0.85); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 8px; padding: 12px 18px; font-size: 14px; letter-spacing: 1px; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#top-left { top: 16px; left: 16px; display: flex; gap: 20px; align-items: center; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#top-right { top: 16px; right: 16px; text-align: right; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>select { background: #0a0a16; color: #00f0ff; border: 1px solid #00f0ff; padding: 4px 8px; border-radius: 4px; font-family: inherit; cursor: pointer; outline: none; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* Takeoff &amp; Crash Screens */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#status-banner { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 20; pointer-events: none; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#countdown-text { color: #00f0ff; font-size: 32px; font-weight: bold; text-shadow: 0 0 10px #00f0ff; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#safe-subtext { color: #ffffff; font-size: 14px; margin-top: 6px; letter-spacing: 2px; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>#crash-screen { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(10, 10, 22, 0.95); border: 2px solid #ff0055; padding: 24px 36px; border-radius: 10px; text-align: center; display: none; z-index: 20; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#crash-screen h1 { color: #ff0055; font-size: 28px; margin-bottom: 8px; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* Touch Controls */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#controls-panel { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 20px; z-index: 10; pointer-events: none; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.btn-group { display: flex; gap: 8px; pointer-events: auto; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.dpad { display: grid; grid-template-columns: repeat(3, 44px); gap: 6px; pointer-events: auto; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.ctrl-btn { width: 44px; height: 44px; background: rgba(0, 240, 255, 0.15); border: 1px solid #00f0ff; color: #00f0ff; font-weight: bold; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 16px; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.ctrl-btn:active { background: rgba(0, 240, 255, 0.5); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="canvas-container"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- HUD Displays --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="top-left" class="hud"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div&gt;NODES CLEARED: &lt;span id="score-val" style="color:#00f0ff;"&gt;0&lt;/span&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>DIFFICULTY:</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;select id="diff-select"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="easy"&gt;EASY&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="normal" selected&gt;NORMAL&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="hard"&gt;HARD&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="top-right" class="hud"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div&gt;VELOCITY: &lt;span id="speed-val" style="color:#00f0ff;"&gt;0&lt;/span&gt; KTS&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div&gt;ALTITUDE: &lt;span id="alt-val" style="color:#00f0ff;"&gt;0&lt;/span&gt; / 500 M&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Status Banner (Countdown &amp; Warnings) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="status-banner"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="countdown-text"&gt;TAKEOFF ZONE&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="safe-subtext"&gt;OBSTACLES ENGAGING IN 10s&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Crash Notification --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="crash-screen"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;SYSTEM FAILURE&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="crash-reason"&gt;Structure Collision&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Touch Controls --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="controls-panel"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="dpad"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div&gt;&lt;/div&gt;&lt;button class="ctrl-btn" data-key="KeyW"&gt;W&lt;/button&gt;&lt;div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="ctrl-btn" data-key="KeyA"&gt;A&lt;/button&gt;&lt;button class="ctrl-btn" data-key="KeyS"&gt;S&lt;/button&gt;&lt;button class="ctrl-btn" data-key="KeyD"&gt;D&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="btn-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="ctrl-btn" data-key="KeyQ"&gt;Q&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="ctrl-btn" data-key="KeyE"&gt;E&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="btn-group" style="flex-direction: column;"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="ctrl-btn" data-key="ShiftLeft"&gt;+&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="ctrl-btn" data-key="ControlLeft"&gt;-&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const MAX_ALTITUDE = 500;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const DIFFICULTY = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>easy: { numBuildings: 12, baseSpeed: 1.0, maxSpeed: 3.0 },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>normal: { numBuildings: 22, baseSpeed: 1.5, maxSpeed: 4.5 },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>hard: { numBuildings: 35, baseSpeed: 2.2, maxSpeed: 6.5 }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let currentDiff = 'normal';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let score = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let isCrashed = false;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let keys = {};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let safeTimeRemaining = 10;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let safeTimerInterval = null;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- DOM Elements ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const container = document.getElementById('canvas-container');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const scoreEl = document.getElementById('score-val');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const speedEl = document.getElementById('speed-val');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const altEl = document.getElementById('alt-val');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const crashScreen = document.getElementById('crash-screen');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const crashReasonEl = document.getElementById('crash-reason');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const diffSelect = document.getElementById('diff-select');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const statusBanner = document.getElementById('status-banner');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const countdownText = document.getElementById('countdown-text');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const safeSubtext = document.getElementById('safe-subtext');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 1. Three.js Core Setup ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const scene = new THREE.Scene();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>scene.background = new THREE.Color(0x0a0a16);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>scene.fog = new THREE.FogExp2(0x0a0a16, 0.0012);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 4000);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const renderer = new THREE.WebGLRenderer({ antialias: true });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderer.setSize(window.innerWidth, window.innerHeight);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>container.appendChild(renderer.domElement);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 2. Lighting ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>scene.add(new THREE.AmbientLight(0x223344, 0.8));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const dirLight = new THREE.DirectionalLight(0x00f0ff, 1.2);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>dirLight.position.set(100, 400, 200);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>scene.add(dirLight);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 3. Web Audio Explosions ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const audioCtx = new (window.AudioContext || window.webkitAudioContext)();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function playCrashSound() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (audioCtx.state === 'suspended') audioCtx.resume();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const osc = audioCtx.createOscillator();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const gain = audioCtx.createGain();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>osc.type = 'sawtooth';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>osc.frequency.setValueAtTime(150, audioCtx.currentTime);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>gain.gain.setValueAtTime(1, audioCtx.currentTime);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>osc.connect(gain);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>gain.connect(audioCtx.destination);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>osc.start();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>osc.stop(audioCtx.currentTime + 0.8);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 4. Jet Entity Construction ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const jet = new THREE.Group();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const hullMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, roughness: 0.3, metalness: 0.8 });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const wingMat = new THREE.MeshStandardMaterial({ color: 0xff0055, roughness: 0.4, metalness: 0.6 });</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const body = new THREE.Mesh(new THREE.ConeGeometry(2.2, 12, 6), hullMat);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>body.rotation.x = Math.PI / 2;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>jet.add(body);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const wings = new THREE.Mesh(new THREE.BoxGeometry(18, 0.3, 3), wingMat);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>wings.position.z = 1.5;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>jet.add(wings);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const propGeo = new THREE.BoxGeometry(0.2, 5, 0.3);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const propMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const propeller = new THREE.Mesh(propGeo, propMat);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>propeller.position.z = -6.1;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>jet.add(propeller);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>scene.add(jet);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const planeBox = new THREE.Box3();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const flight = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>speed: 1.5,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>maxSpeed: DIFFICULTY[currentDiff].maxSpeed,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>minSpeed: 0.6,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>accel: 0.025,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>pitch: 0.028,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>roll: 0.038,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>yaw: 0.018</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 5. Dynamic World Generation with 10s Safe Zone ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const chunkSize = 600;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let chunks = new Map();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let activeObstacles = [];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let particles = [];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function createChunk(cx, cz) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const chunkGroup = new THREE.Group();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const startX = cx * chunkSize;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const startZ = cz * chunkSize;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const groundMat = new THREE.MeshBasicMaterial({ color: 0x110022, wireframe: true });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const ground = new THREE.Mesh(new THREE.PlaneGeometry(chunkSize, chunkSize, 20, 20), groundMat);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ground.rotation.x = -Math.PI / 2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ground.position.set(startX + chunkSize / 2, 0, startZ + chunkSize / 2);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chunkGroup.add(ground);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const ceilingMat = new THREE.MeshBasicMaterial({ color: 0xff0055, wireframe: true, transparent: true, opacity: 0.15 });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(chunkSize, chunkSize, 10, 10), ceilingMat);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ceiling.rotation.x = Math.PI / 2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ceiling.position.set(startX + chunkSize / 2, MAX_ALTITUDE, startZ + chunkSize / 2);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chunkGroup.add(ceiling);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Safe Corridor: Don't spawn buildings in the initial starting area (Z &gt; -2500)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (startZ &lt; -2500) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const bldgMat = new THREE.MeshPhongMaterial({ color: 0x0f172a, emissive: 0x0284c7, emissiveIntensity: 0.15, flatShading: true });</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const numBldgs = DIFFICULTY[currentDiff].numBuildings;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>for (let i = 0; i &lt; numBldgs; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const w = 35 + Math.random() * 45;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const h = 480 + Math.random() * 180;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const d = 35 + Math.random() * 45;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const bx = startX + 40 + Math.random() * (chunkSize - 80);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const bz = startZ + 40 + Math.random() * (chunkSize - 80);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bldgMat);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>building.position.set(bx, h / 2, bz);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>chunkGroup.add(building);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>const box = new THREE.Box3();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>box.setFromCenterAndSize(new THREE.Vector3(bx, h / 2, bz), new THREE.Vector3(w, h, d));</p>
+<p class="p1"><span class="Apple-converted-space">          </span>activeObstacles.push({ box, passed: false, centerZ: bz });</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>scene.add(chunkGroup);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return chunkGroup;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function clearWorld() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chunks.forEach(g =&gt; scene.remove(g));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chunks.clear();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>activeObstacles = [];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function updateChunks(px, pz) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const ccx = Math.floor(px / chunkSize);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const ccz = Math.floor(pz / chunkSize);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const keepKeys = new Set();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (let x = ccx - 2; x &lt;= ccx + 2; x++) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>for (let z = ccz - 2; z &lt;= ccz + 2; z++) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const key = `${x}_${z}`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>keepKeys.add(key);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (!chunks.has(key)) chunks.set(key, createChunk(x, z));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>chunks.forEach((group, key) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (!keepKeys.has(key)) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>scene.remove(group);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>chunks.delete(key);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 6. Takeoff Countdown Controller ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function startTakeoffSequence() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (safeTimerInterval) clearInterval(safeTimerInterval);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>safeTimeRemaining = 10;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>statusBanner.style.display = 'block';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>countdownText.textContent = 'TAKEOFF ZONE';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>countdownText.style.color = '#00f0ff';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>safeSubtext.textContent = `OBSTACLES ENGAGING IN ${safeTimeRemaining}s`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>safeTimerInterval = setInterval(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>safeTimeRemaining--;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (safeTimeRemaining &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>safeSubtext.textContent = `OBSTACLES ENGAGING IN ${safeTimeRemaining}s`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>clearInterval(safeTimerInterval);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>countdownText.textContent = 'HAZARDS ACTIVE';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>countdownText.style.color = '#ff0055';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>safeSubtext.textContent = 'NAVIGATE CITY GRID';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>statusBanner.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}, 2000);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}, 1000);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 7. Crash &amp; Reset Pipeline ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function triggerCrash(reason) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (isCrashed) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>isCrashed = true;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (safeTimerInterval) clearInterval(safeTimerInterval);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>statusBanner.style.display = 'none';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>crashReasonEl.textContent = reason;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>crashScreen.style.display = 'block';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>playCrashSound();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const particleGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const particleMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (let i = 0; i &lt; 40; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const p = new THREE.Mesh(particleGeo, particleMat);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>p.position.copy(jet.position);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>p.velocity = new THREE.Vector3((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>scene.add(p);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>particles.push(p);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>jet.visible = false;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setTimeout(resetGame, 2000);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function resetGame() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>clearWorld();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const settings = DIFFICULTY[currentDiff];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>flight.speed = settings.baseSpeed;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>flight.maxSpeed = settings.maxSpeed;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>jet.position.set(0, 50, 0);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>jet.quaternion.set(0, 0, 0, 1);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>score = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scoreEl.textContent = '0';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>crashScreen.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>jet.visible = true;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>isCrashed = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>particles.forEach(p =&gt; scene.remove(p));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>particles = [];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>startTakeoffSequence();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 8. Event Listeners ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.addEventListener('keydown', e =&gt; keys[e.code] = true);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.addEventListener('keyup', e =&gt; keys[e.code] = false);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>diffSelect.addEventListener('change', e =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>currentDiff = e.target.value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>resetGame();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.querySelectorAll('.ctrl-btn').forEach(btn =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const code = btn.dataset.key;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const setKey = val =&gt; e =&gt; { e.preventDefault(); keys[code] = val; };</p>
+<p class="p1"><span class="Apple-converted-space">      </span>btn.addEventListener('mousedown', setKey(true));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>btn.addEventListener('mouseup', setKey(false));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>btn.addEventListener('touchstart', setKey(true));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>btn.addEventListener('touchend', setKey(false));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.addEventListener('resize', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>camera.aspect = window.innerWidth / window.innerHeight;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>camera.updateProjectionMatrix();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderer.setSize(window.innerWidth, window.innerHeight);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>resetGame();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- 9. Animation &amp; Render Loop ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function animate() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>requestAnimationFrame(animate);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>propeller.rotation.z += 0.4;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>particles.forEach(p =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>p.position.add(p.velocity);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>p.scale.multiplyScalar(0.95);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!isCrashed) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['ShiftLeft']) flight.speed = Math.min(flight.maxSpeed, flight.speed + flight.accel);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['ControlLeft']) flight.speed = Math.max(flight.minSpeed, flight.speed - flight.accel);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['KeyW']) jet.rotateX(-flight.pitch);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['KeyS']) jet.rotateX(flight.pitch);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['KeyA']) jet.rotateZ(flight.roll);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['KeyD']) jet.rotateZ(-flight.roll);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['KeyQ']) jet.rotateY(flight.yaw);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keys['KeyE']) jet.rotateY(-flight.yaw);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (!keys['KeyA'] &amp;&amp; !keys['KeyD']) jet.rotation.z *= 0.97;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(jet.quaternion);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>jet.position.addScaledVector(forward, flight.speed * 6.5);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>planeBox.setFromObject(jet);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (jet.position.y &lt;= 2.0) triggerCrash('Impact: Ground Surface Collision!');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (jet.position.y &gt;= MAX_ALTITUDE) triggerCrash('Alert: Boundary Limits Exceeded!');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>for (let i = activeObstacles.length - 1; i &gt;= 0; i--) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const obs = activeObstacles[i];</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (planeBox.intersectsBox(obs.box)) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>triggerCrash('Impact: Structure Collision!');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>break;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (!obs.passed &amp;&amp; jet.position.z &lt; obs.centerZ - 35) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>obs.passed = true;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>score++;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>scoreEl.textContent = score;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>updateChunks(jet.position.x, jet.position.z);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>speedEl.textContent = Math.round(flight.speed * 120);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>altEl.textContent = Math.round(jet.position.y);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>altEl.style.color = jet.position.y &gt; 400 ? '#ff0055' : '#00f0ff';</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// Smooth Camera Follow</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const offset = new THREE.Vector3(0, 7, 24).applyQuaternion(jet.quaternion).add(jet.position);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const target = new THREE.Vector3(0, 0, -12).applyQuaternion(jet.quaternion).add(jet.position);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>camera.position.copy(offset);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>camera.lookAt(target);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderer.render(scene, camera);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>animate();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
